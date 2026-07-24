@@ -35,6 +35,12 @@ export interface KPICard {
   bgColor: string;
 }
 
+export interface KPIGroup {
+  id: string;
+  label: string;
+  cards: KPICard[];
+}
+
 export interface FunnelKPIItem {
   label: string;
   value: string;

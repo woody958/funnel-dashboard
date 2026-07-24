@@ -8,8 +8,8 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
-import type { Task, DashboardOptions, TodoItem, FunnelDetailData, FunnelKPIItem } from "@/lib/types";
-import { defaultOptions, mockTasks, initialTodos, funnelDetails as defaultFunnelDetails } from "@/lib/mockData";
+import type { Task, DashboardOptions, TodoItem, FunnelDetailData, FunnelKPIItem, KPIGroup, KPICard } from "@/lib/types";
+import { defaultOptions, mockTasks, initialTodos, funnelDetails as defaultFunnelDetails, defaultKPIGroups } from "@/lib/mockData";
 import { generateId, toISODate } from "@/lib/utils";
 
 interface DashboardContextValue {
@@ -17,6 +17,7 @@ interface DashboardContextValue {
   tasks: Task[];
   todos: TodoItem[];
   funnelDetails: FunnelDetailData[];
+  kpiGroups: KPIGroup[];
   addTask: (task: Omit<Task, "id" | "createdAt">) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -37,6 +38,8 @@ interface DashboardContextValue {
   deleteTodo: (id: string) => void;
   updateFunnelKPIs: (funnelId: string, kpis: FunnelKPIItem[]) => void;
   updateFunnelSummary: (funnelId: string, summary: string) => void;
+  updateKPIGroupLabel: (groupId: string, label: string) => void;
+  updateKPIGroupCards: (groupId: string, cards: KPICard[]) => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -45,6 +48,7 @@ const LS_TASKS = "fd_tasks_v2";
 const LS_OPTIONS = "fd_options_v2";
 const LS_TODOS = "fd_todos_v2";
 const LS_FUNNEL_DETAILS = "fd_funnel_details_v2";
+const LS_KPI_GROUPS = "fd_kpi_groups_v2";
 
 function load<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -66,6 +70,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
   const [funnelDetails, setFunnelDetails] = useState<FunnelDetailData[]>(defaultFunnelDetails);
+  const [kpiGroups, setKpiGroups] = useState<KPIGroup[]>(defaultKPIGroups);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -73,6 +78,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setTasks(load(LS_TASKS, mockTasks));
     setTodos(load(LS_TODOS, initialTodos));
     setFunnelDetails(load(LS_FUNNEL_DETAILS, defaultFunnelDetails));
+    setKpiGroups(load(LS_KPI_GROUPS, defaultKPIGroups));
     setHydrated(true);
   }, []);
 
@@ -91,6 +97,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) save(LS_FUNNEL_DETAILS, funnelDetails);
   }, [funnelDetails, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) save(LS_KPI_GROUPS, kpiGroups);
+  }, [kpiGroups, hydrated]);
 
   const addTask = useCallback((task: Omit<Task, "id" | "createdAt">) => {
     const newTask: Task = {
@@ -186,6 +196,18 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const updateKPIGroupLabel = useCallback((groupId: string, label: string) => {
+    setKpiGroups((prev) =>
+      prev.map((g) => g.id === groupId ? { ...g, label } : g)
+    );
+  }, []);
+
+  const updateKPIGroupCards = useCallback((groupId: string, cards: KPICard[]) => {
+    setKpiGroups((prev) =>
+      prev.map((g) => g.id === groupId ? { ...g, cards } : g)
+    );
+  }, []);
+
   return (
     <DashboardContext.Provider
       value={{
@@ -193,6 +215,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         tasks,
         todos,
         funnelDetails,
+        kpiGroups,
         addTask,
         updateTask,
         deleteTask,
@@ -204,6 +227,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         deleteTodo,
         updateFunnelKPIs,
         updateFunnelSummary,
+        updateKPIGroupLabel,
+        updateKPIGroupCards,
       }}
     >
       {children}
