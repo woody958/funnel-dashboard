@@ -38,9 +38,9 @@ interface DashboardContextValue {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-const LS_TASKS = "fd_tasks";
-const LS_OPTIONS = "fd_options";
-const LS_TODOS = "fd_todos";
+const LS_TASKS = "fd_tasks_v2";
+const LS_OPTIONS = "fd_options_v2";
+const LS_TODOS = "fd_todos_v2";
 
 function load<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
