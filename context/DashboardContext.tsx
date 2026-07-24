@@ -44,8 +44,8 @@ interface DashboardContextValue {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-const LS_TASKS = "fd_tasks_v2";
-const LS_OPTIONS = "fd_options_v2";
+const LS_TASKS = "fd_tasks_v3";
+const LS_OPTIONS = "fd_options_v3";
 const LS_TODOS = "fd_todos_v2";
 const LS_FUNNEL_DETAILS = "fd_funnel_details_v2";
 const LS_KPI_GROUPS = "fd_kpi_groups_v2";
