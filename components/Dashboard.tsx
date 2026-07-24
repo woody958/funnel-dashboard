@@ -14,44 +14,38 @@ export default function Dashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { tasks } = useDashboard();
 
-  const inProgress = tasks.filter(
-    (t) => t.statusId === "st-inprog"
-  ).length;
+  const inProgress = tasks.filter((t) => t.statusId === "st-inprog").length;
 
   return (
-    <div className="min-h-screen bg-[#0F1117]">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[#2A2D45] bg-[#0F1117]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-screen-2xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4F8EF7]/20">
-                <Activity size={16} className="text-[#4F8EF7]" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+                <Activity size={16} className="text-blue-500" />
               </div>
               <div>
-                <span className="text-sm font-bold text-white">
+                <span className="text-sm font-bold text-slate-900">
                   퍼널 미션 대시보드
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500">
-                    진행중 업무{" "}
-                    <span className="font-semibold text-[#4F8EF7]">
-                      {inProgress}건
-                    </span>
-                  </span>
+                <div className="text-[10px] text-slate-400">
+                  진행중 업무{" "}
+                  <span className="font-semibold text-blue-500">{inProgress}건</span>
                 </div>
               </div>
             </div>
 
-            {/* Main tab switcher */}
-            <div className="flex items-center gap-1 rounded-xl border border-[#2A2D45] bg-[#1A1D2E] p-1">
+            {/* Tab switcher */}
+            <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
               <button
                 onClick={() => setActiveTab("data")}
                 className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
                   activeTab === "data"
-                    ? "bg-[#4F8EF7] text-white shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <BarChart3 size={14} />
@@ -61,8 +55,8 @@ export default function Dashboard() {
                 onClick={() => setActiveTab("mission")}
                 className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
                   activeTab === "mission"
-                    ? "bg-[#4F8EF7] text-white shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <Target size={14} />
@@ -73,7 +67,7 @@ export default function Dashboard() {
             {/* Settings */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2D45] bg-[#1E2235] text-slate-400 hover:border-[#4F8EF7] hover:text-[#4F8EF7]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:border-blue-300 hover:text-blue-500"
               title="드롭다운 옵션 관리"
             >
               <Settings size={15} />
@@ -88,11 +82,7 @@ export default function Dashboard() {
         {activeTab === "mission" && <MissionTab />}
       </main>
 
-      {/* Settings modal */}
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-      />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }

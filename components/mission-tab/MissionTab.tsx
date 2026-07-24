@@ -19,16 +19,15 @@ export default function MissionTab() {
 
   return (
     <div>
-      {/* Sub-tab nav */}
-      <div className="mb-5 flex gap-1 rounded-xl border border-[#2A2D45] bg-[#1A1D2E] p-1">
+      <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
             onClick={() => setActive(id)}
             className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
               active === id
-                ? "bg-[#4F8EF7] text-white shadow"
-                : "text-slate-400 hover:bg-[#252840] hover:text-white"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
             <Icon size={14} />
@@ -36,8 +35,6 @@ export default function MissionTab() {
           </button>
         ))}
       </div>
-
-      {/* Sub-tab content */}
       <div>
         {active === "report" && <TaskReport />}
         {active === "gantt" && <GanttChart />}

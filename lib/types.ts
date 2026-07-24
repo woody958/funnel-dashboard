@@ -35,10 +35,13 @@ export interface KPICard {
   bgColor: string;
 }
 
-export interface FunnelStage {
-  id: string;
-  name: string;
-  count: number;
+export interface FunnelKPIItem {
+  label: string;
+  value: string;
+  target: string;
+  achievement: number;
+  change: number;
+  changeLabel: string;
   color: string;
 }
 
@@ -57,6 +60,15 @@ export interface TodoItem {
   completed: boolean;
   priority: "high" | "medium" | "low";
   relatedStage: string;
+  funnelId?: string;
+}
+
+export interface FunnelDetailData {
+  funnelId: string;
+  summary: string;
+  kpis: FunnelKPIItem[];
+  bottlenecks: Bottleneck[];
+  todos: TodoItem[];
 }
 
 export type GanttGroupBy = "importance" | "assignee" | "funnel";

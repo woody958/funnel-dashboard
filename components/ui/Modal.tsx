@@ -12,48 +12,24 @@ interface ModalProps {
   size?: "sm" | "md" | "lg" | "xl";
 }
 
-export default function Modal({
-  open,
-  onClose,
-  title,
-  children,
-  size = "md",
-}: ModalProps) {
+export default function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     if (open) document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
   if (!open) return null;
 
-  const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-  };
+  const sizeClasses = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
-        className={cn(
-          "relative w-full rounded-xl border border-[#2A2D45] bg-[#1E2235] shadow-2xl",
-          sizeClasses[size]
-        )}
-      >
-        <div className="flex items-center justify-between border-b border-[#2A2D45] px-6 py-4">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-[#252840] hover:text-white"
-          >
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className={cn("relative w-full rounded-xl border border-slate-200 bg-white shadow-xl", sizeClasses[size])}>
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
             <X size={16} />
           </button>
         </div>

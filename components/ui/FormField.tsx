@@ -3,31 +3,21 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-interface FormFieldProps {
-  label: string;
-  children: ReactNode;
-  className?: string;
-}
-
-export function FormField({ label, children, className }: FormFieldProps) {
+export function FormField({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label className="text-xs font-medium text-slate-400">{label}</label>
+      <label className="text-xs font-medium text-slate-500">{label}</label>
       {children}
     </div>
   );
 }
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  className?: string;
-}
-
-export function Input({ className, ...props }: InputProps) {
+export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cn(
-        "w-full rounded-lg border border-[#2A2D45] bg-[#0F1117] px-3 py-2 text-sm text-slate-200 placeholder-slate-500",
-        "focus:border-[#4F8EF7] focus:ring-1 focus:ring-[#4F8EF7]",
+        "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400",
+        "focus:border-blue-400 focus:ring-1 focus:ring-blue-400",
         className
       )}
       {...props}
@@ -35,16 +25,12 @@ export function Input({ className, ...props }: InputProps) {
   );
 }
 
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  className?: string;
-}
-
-export function Textarea({ className, ...props }: TextareaProps) {
+export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       className={cn(
-        "w-full rounded-lg border border-[#2A2D45] bg-[#0F1117] px-3 py-2 text-sm text-slate-200 placeholder-slate-500 resize-none",
-        "focus:border-[#4F8EF7] focus:ring-1 focus:ring-[#4F8EF7]",
+        "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 resize-none",
+        "focus:border-blue-400 focus:ring-1 focus:ring-blue-400",
         className
       )}
       {...props}
@@ -52,17 +38,12 @@ export function Textarea({ className, ...props }: TextareaProps) {
   );
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  className?: string;
-  children: ReactNode;
-}
-
-export function Select({ className, children, ...props }: SelectProps) {
+export function Select({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
   return (
     <select
       className={cn(
-        "w-full rounded-lg border border-[#2A2D45] bg-[#0F1117] px-3 py-2 text-sm text-slate-200",
-        "focus:border-[#4F8EF7] focus:ring-1 focus:ring-[#4F8EF7]",
+        "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800",
+        "focus:border-blue-400 focus:ring-1 focus:ring-blue-400",
         className
       )}
       {...props}
@@ -78,34 +59,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-export function Button({
-  variant = "primary",
-  size = "md",
-  className,
-  children,
-  ...props
-}: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all";
-  const sizes = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2 text-sm",
-  };
+export function Button({ variant = "primary", size = "md", className, children, ...props }: ButtonProps) {
+  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all";
+  const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2 text-sm" };
   const variants = {
-    primary:
-      "bg-[#4F8EF7] text-white hover:bg-[#3B7DE8] disabled:opacity-50 disabled:cursor-not-allowed",
-    secondary:
-      "border border-[#2A2D45] bg-[#252840] text-slate-300 hover:bg-[#363A55] hover:text-white",
-    danger:
-      "bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30 hover:bg-[#EF4444]/30",
-    ghost: "text-slate-400 hover:bg-[#252840] hover:text-white",
+    primary: "bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed",
+    secondary: "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+    danger: "bg-red-50 text-red-500 border border-red-200 hover:bg-red-100",
+    ghost: "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
   };
-
   return (
-    <button
-      className={cn(base, sizes[size], variants[variant], className)}
-      {...props}
-    >
+    <button className={cn(base, sizes[size], variants[variant], className)} {...props}>
       {children}
     </button>
   );

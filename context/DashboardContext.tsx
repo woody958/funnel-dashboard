@@ -31,7 +31,7 @@ interface DashboardContextValue {
     color: string
   ) => void;
   deleteOption: (category: keyof DashboardOptions, id: string) => void;
-  addTodo: (text: string, priority: TodoItem["priority"], relatedStage: string) => void;
+  addTodo: (text: string, priority: TodoItem["priority"], relatedStage: string, funnelId?: string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
 }
@@ -140,13 +140,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   );
 
   const addTodo = useCallback(
-    (text: string, priority: TodoItem["priority"], relatedStage: string) => {
+    (text: string, priority: TodoItem["priority"], relatedStage: string, funnelId?: string) => {
       const newTodo: TodoItem = {
         id: generateId(),
         text,
         completed: false,
         priority,
         relatedStage,
+        funnelId,
       };
       setTodos((prev) => [...prev, newTodo]);
     },

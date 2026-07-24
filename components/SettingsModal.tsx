@@ -15,26 +15,22 @@ const CATEGORY_LABELS: Record<keyof DashboardOptions, string> = {
 };
 
 const PRESET_COLORS = [
-  "#EF4444", "#F97316", "#F59E0B", "#EAB308",
-  "#10B981", "#06B6D4", "#3B82F6", "#8B5CF6",
-  "#EC4899", "#6B7280",
+  "#EF4444","#F97316","#F59E0B","#EAB308",
+  "#10B981","#06B6D4","#3B82F6","#6366F1",
+  "#8B5CF6","#EC4899","#6B7280",
 ];
 
-interface OptionRowProps {
+function OptionRow({ option, onUpdate, onDelete }: {
   option: DropdownOption;
   onUpdate: (id: string, label: string, color: string) => void;
   onDelete: (id: string) => void;
-}
-
-function OptionRow({ option, onUpdate, onDelete }: OptionRowProps) {
+}) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(option.label);
   const [color, setColor] = useState(option.color);
 
   function save() {
-    if (label.trim()) {
-      onUpdate(option.id, label.trim(), color);
-    }
+    if (label.trim()) onUpdate(option.id, label.trim(), color);
     setEditing(false);
   }
 
@@ -45,90 +41,42 @@ function OptionRow({ option, onUpdate, onDelete }: OptionRowProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-[#2A2D45] bg-[#0F1117] p-2.5">
+    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
       {editing ? (
         <>
-          <div className="relative">
-            <div
-              className="h-6 w-6 rounded cursor-pointer border border-[#2A2D45] overflow-hidden"
-              style={{ backgroundColor: color }}
-            >
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
+          <div className="relative h-6 w-6 shrink-0">
+            <div className="h-6 w-6 rounded cursor-pointer border border-slate-300 overflow-hidden" style={{ backgroundColor: color }}>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
             </div>
           </div>
-          <input
-            autoFocus
-            type="text"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") save();
-              if (e.key === "Escape") cancel();
-            }}
-            className="flex-1 bg-transparent text-sm text-slate-200 outline-none"
-          />
-          <div className="flex gap-1">
+          <input autoFocus type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") cancel(); }}
+            className="flex-1 bg-transparent text-sm text-slate-800 outline-none" />
+          <div className="flex items-center gap-1">
             <div className="flex flex-wrap gap-1 max-w-[120px]">
               {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
+                <button key={c} onClick={() => setColor(c)}
                   className="h-4 w-4 rounded-full border-2"
-                  style={{
-                    backgroundColor: c,
-                    borderColor: c === color ? "white" : "transparent",
-                  }}
-                />
+                  style={{ backgroundColor: c, borderColor: c === color ? "#1e293b" : "transparent" }} />
               ))}
             </div>
-            <button onClick={save} className="rounded p-1 text-[#10B981] hover:bg-[#10B981]/20">
-              <Check size={13} />
-            </button>
-            <button onClick={cancel} className="rounded p-1 text-slate-500 hover:bg-[#252840]">
-              <X size={13} />
-            </button>
+            <button onClick={save} className="rounded p-1 text-emerald-500 hover:bg-emerald-50"><Check size={13} /></button>
+            <button onClick={cancel} className="rounded p-1 text-slate-400 hover:bg-slate-200"><X size={13} /></button>
           </div>
         </>
       ) : (
         <>
-          <span
-            className="h-5 w-5 rounded-full shrink-0"
-            style={{ backgroundColor: option.color }}
-          />
-          <span
-            className="flex-1 cursor-pointer text-sm text-slate-200"
-            onClick={() => setEditing(true)}
-          >
-            {option.label}
-          </span>
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-[#252840] hover:text-slate-300"
-          >
-            수정
-          </button>
-          <button
-            onClick={() => onDelete(option.id)}
-            className="rounded p-1 text-slate-600 hover:bg-[#EF4444]/20 hover:text-[#EF4444]"
-          >
-            <Trash2 size={12} />
-          </button>
+          <span className="h-5 w-5 rounded-full shrink-0" style={{ backgroundColor: option.color }} />
+          <span className="flex-1 cursor-pointer text-sm text-slate-700" onClick={() => setEditing(true)}>{option.label}</span>
+          <button onClick={() => setEditing(true)} className="rounded px-2 py-0.5 text-[11px] text-slate-400 hover:bg-slate-200 hover:text-slate-700">수정</button>
+          <button onClick={() => onDelete(option.id)} className="rounded p-1 text-slate-300 hover:bg-red-50 hover:text-red-400"><Trash2 size={12} /></button>
         </>
       )}
     </div>
   );
 }
 
-interface AddOptionFormProps {
-  onAdd: (label: string, color: string) => void;
-}
-
-function AddOptionForm({ onAdd }: AddOptionFormProps) {
+function AddOptionForm({ onAdd }: { onAdd: (label: string, color: string) => void }) {
   const [label, setLabel] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[4]);
 
@@ -141,89 +89,46 @@ function AddOptionForm({ onAdd }: AddOptionFormProps) {
   return (
     <div className="mt-2 flex items-center gap-2">
       <div className="relative h-7 w-7 shrink-0">
-        <div
-          className="h-7 w-7 rounded-full cursor-pointer border-2 border-[#2A2D45]"
-          style={{ backgroundColor: color }}
-        >
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full rounded-full"
-          />
+        <div className="h-7 w-7 rounded-full cursor-pointer border-2 border-slate-300" style={{ backgroundColor: color }}>
+          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full rounded-full" />
         </div>
       </div>
-      <input
-        type="text"
-        placeholder="새 항목 이름"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-        className="flex-1 rounded-lg border border-[#2A2D45] bg-[#0F1117] px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:border-[#4F8EF7] outline-none"
-      />
-      <Button size="sm" onClick={handleAdd} disabled={!label.trim()}>
-        <Plus size={12} /> 추가
-      </Button>
+      <input type="text" placeholder="새 항목 이름" value={label} onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-400 outline-none" />
+      <Button size="sm" onClick={handleAdd} disabled={!label.trim()}><Plus size={12} /> 추가</Button>
     </div>
   );
 }
 
-interface SettingsModalProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+export default function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { options, addOption, updateOption, deleteOption } = useDashboard();
-  const [activeCategory, setActiveCategory] =
-    useState<keyof DashboardOptions>("importance");
-
+  const [activeCategory, setActiveCategory] = useState<keyof DashboardOptions>("importance");
   const categories = Object.keys(CATEGORY_LABELS) as (keyof DashboardOptions)[];
 
   return (
     <Modal open={open} onClose={onClose} title="드롭다운 옵션 관리" size="lg">
-      {/* Category tabs */}
-      <div className="mb-4 flex gap-1 rounded-lg bg-[#0F1117] p-1">
+      <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1">
         {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
+          <button key={cat} onClick={() => setActiveCategory(cat)}
             className={`flex-1 rounded py-1.5 text-xs font-medium transition-all ${
-              activeCategory === cat
-                ? "bg-[#4F8EF7] text-white"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
+              activeCategory === cat ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}>
             {CATEGORY_LABELS[cat]}
           </button>
         ))}
       </div>
-
-      {/* Options list */}
       <div className="space-y-2">
         {options[activeCategory].length === 0 && (
-          <div className="py-6 text-center text-sm text-slate-500">
-            등록된 항목이 없습니다
-          </div>
+          <div className="py-6 text-center text-sm text-slate-400">등록된 항목이 없습니다</div>
         )}
         {options[activeCategory].map((opt) => (
-          <OptionRow
-            key={opt.id}
-            option={opt}
-            onUpdate={(id, label, color) =>
-              updateOption(activeCategory, id, label, color)
-            }
-            onDelete={(id) => deleteOption(activeCategory, id)}
-          />
+          <OptionRow key={opt.id} option={opt}
+            onUpdate={(id, label, color) => updateOption(activeCategory, id, label, color)}
+            onDelete={(id) => deleteOption(activeCategory, id)} />
         ))}
       </div>
-
-      {/* Add form */}
-      <AddOptionForm
-        onAdd={(label, color) => addOption(activeCategory, label, color)}
-      />
-
-      <div className="mt-5 flex justify-end border-t border-[#2A2D45] pt-4">
+      <AddOptionForm onAdd={(label, color) => addOption(activeCategory, label, color)} />
+      <div className="mt-5 flex justify-end border-t border-slate-200 pt-4">
         <Button onClick={onClose}>완료</Button>
       </div>
     </Modal>
