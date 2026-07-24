@@ -8,14 +8,15 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
-import type { Task, DashboardOptions, TodoItem } from "@/lib/types";
-import { defaultOptions, mockTasks, initialTodos } from "@/lib/mockData";
+import type { Task, DashboardOptions, TodoItem, FunnelDetailData, FunnelKPIItem } from "@/lib/types";
+import { defaultOptions, mockTasks, initialTodos, funnelDetails as defaultFunnelDetails } from "@/lib/mockData";
 import { generateId, toISODate } from "@/lib/utils";
 
 interface DashboardContextValue {
   options: DashboardOptions;
   tasks: Task[];
   todos: TodoItem[];
+  funnelDetails: FunnelDetailData[];
   addTask: (task: Omit<Task, "id" | "createdAt">) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -34,6 +35,8 @@ interface DashboardContextValue {
   addTodo: (text: string, priority: TodoItem["priority"], relatedStage: string, funnelId?: string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
+  updateFunnelKPIs: (funnelId: string, kpis: FunnelKPIItem[]) => void;
+  updateFunnelSummary: (funnelId: string, summary: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -41,6 +44,7 @@ const DashboardContext = createContext<DashboardContextValue | null>(null);
 const LS_TASKS = "fd_tasks_v2";
 const LS_OPTIONS = "fd_options_v2";
 const LS_TODOS = "fd_todos_v2";
+const LS_FUNNEL_DETAILS = "fd_funnel_details_v2";
 
 function load<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -61,12 +65,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [options, setOptions] = useState<DashboardOptions>(defaultOptions);
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
+  const [funnelDetails, setFunnelDetails] = useState<FunnelDetailData[]>(defaultFunnelDetails);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setOptions(load(LS_OPTIONS, defaultOptions));
     setTasks(load(LS_TASKS, mockTasks));
     setTodos(load(LS_TODOS, initialTodos));
+    setFunnelDetails(load(LS_FUNNEL_DETAILS, defaultFunnelDetails));
     setHydrated(true);
   }, []);
 
@@ -81,6 +87,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) save(LS_TODOS, todos);
   }, [todos, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) save(LS_FUNNEL_DETAILS, funnelDetails);
+  }, [funnelDetails, hydrated]);
 
   const addTask = useCallback((task: Omit<Task, "id" | "createdAt">) => {
     const newTask: Task = {
@@ -164,12 +174,25 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setTodos((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const updateFunnelKPIs = useCallback((funnelId: string, kpis: FunnelKPIItem[]) => {
+    setFunnelDetails((prev) =>
+      prev.map((fd) => fd.funnelId === funnelId ? { ...fd, kpis } : fd)
+    );
+  }, []);
+
+  const updateFunnelSummary = useCallback((funnelId: string, summary: string) => {
+    setFunnelDetails((prev) =>
+      prev.map((fd) => fd.funnelId === funnelId ? { ...fd, summary } : fd)
+    );
+  }, []);
+
   return (
     <DashboardContext.Provider
       value={{
         options,
         tasks,
         todos,
+        funnelDetails,
         addTask,
         updateTask,
         deleteTask,
@@ -179,6 +202,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         addTodo,
         toggleTodo,
         deleteTodo,
+        updateFunnelKPIs,
+        updateFunnelSummary,
       }}
     >
       {children}

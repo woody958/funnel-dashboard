@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { AlertTriangle, AlertCircle, Info, TrendingUp, CheckCircle2, Circle, Plus, Trash2 } from "lucide-react";
-import type { FunnelDetailData } from "@/lib/types";
+import { useState, useEffect } from "react";
+import { AlertTriangle, AlertCircle, Info, TrendingUp, CheckCircle2, Circle, Plus, Trash2, Pencil } from "lucide-react";
+import type { FunnelDetailData, FunnelKPIItem } from "@/lib/types";
 import { useDashboard } from "@/context/DashboardContext";
+import Modal from "@/components/ui/Modal";
+import { Button } from "@/components/ui/FormField";
 
 const impactConfig = {
   high: { label: "높음", color: "#EF4444", bg: "#FEF2F2", Icon: AlertTriangle },
@@ -30,12 +32,150 @@ function AchievementBar({ value, color }: { value: number; color: string }) {
   );
 }
 
+function calcAchievement(value: string, target: string): number {
+  const extractNum = (s: string) => {
+    const match = s.replace(/,/g, "").match(/[\d.]+/);
+    return match ? parseFloat(match[0]) : null;
+  };
+  const v = extractNum(value);
+  const t = extractNum(target);
+  if (v !== null && t !== null && t !== 0) {
+    return Math.round((v / t) * 100);
+  }
+  return 0;
+}
+
+function KPIEditModal({
+  open,
+  onClose,
+  kpis,
+  funnelColor,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  kpis: FunnelKPIItem[];
+  funnelColor: string;
+  onSave: (kpis: FunnelKPIItem[]) => void;
+}) {
+  const [items, setItems] = useState<FunnelKPIItem[]>([]);
+
+  useEffect(() => {
+    if (open) setItems(kpis.map((k) => ({ ...k })));
+  }, [open]);
+
+  function updateItem(index: number, field: keyof FunnelKPIItem, val: string | number) {
+    setItems((prev) => {
+      const next = prev.map((item, i) => i === index ? { ...item, [field]: val } : item);
+      if (field === "value" || field === "target") {
+        const item = next[index];
+        next[index] = { ...item, achievement: calcAchievement(item.value, item.target) };
+      }
+      return next;
+    });
+  }
+
+  function addItem() {
+    setItems((prev) => [
+      ...prev,
+      { label: "", value: "", target: "", achievement: 0, change: 0, changeLabel: "", color: funnelColor },
+    ]);
+  }
+
+  function removeItem(index: number) {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="KPI 항목 편집" size="lg">
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-slate-400">KPI #{i + 1}</span>
+              <button
+                onClick={() => removeItem(i)}
+                className="text-slate-300 hover:text-red-400 transition-colors"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="col-span-2">
+                <label className="mb-0.5 block text-[10px] text-slate-500">항목명</label>
+                <input
+                  value={item.label}
+                  onChange={(e) => updateItem(i, "label", e.target.value)}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  placeholder="예: 커리큘럼 완성도"
+                />
+              </div>
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">현재 값</label>
+                <input
+                  value={item.value}
+                  onChange={(e) => updateItem(i, "value", e.target.value)}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  placeholder="예: 85%"
+                />
+              </div>
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">목표 값</label>
+                <input
+                  value={item.target}
+                  onChange={(e) => updateItem(i, "target", e.target.value)}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  placeholder="예: 100%"
+                />
+              </div>
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">
+                  달성률 (%) <span className="text-slate-400">· 자동계산</span>
+                </label>
+                <input
+                  type="number"
+                  value={item.achievement}
+                  onChange={(e) => updateItem(i, "achievement", Number(e.target.value))}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">변화 레이블</label>
+                <input
+                  value={item.changeLabel}
+                  onChange={(e) => updateItem(i, "changeLabel", e.target.value)}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  placeholder="예: 전주 대비"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={addItem}
+        className="mt-3 flex items-center gap-1.5 text-xs text-blue-500 hover:text-blue-600 font-medium"
+      >
+        <Plus size={13} /> KPI 항목 추가
+      </button>
+
+      <div className="mt-4 flex justify-end gap-2 border-t border-slate-200 pt-4">
+        <Button variant="secondary" onClick={onClose}>취소</Button>
+        <Button onClick={() => { onSave(items); onClose(); }}>저장</Button>
+      </div>
+    </Modal>
+  );
+}
+
 export default function FunnelDetail({ detail, funnelColor }: { detail: FunnelDetailData; funnelColor: string }) {
-  const { todos: globalTodos, addTodo, toggleTodo, deleteTodo } = useDashboard();
+  const { todos: globalTodos, addTodo, toggleTodo, deleteTodo, updateFunnelKPIs } = useDashboard();
   const [inputText, setInputText] = useState("");
   const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
+  const [editKPIOpen, setEditKPIOpen] = useState(false);
 
-  // Use todos from global context filtered by funnelId
   const todos = globalTodos.filter((t) => t.funnelId === detail.funnelId);
 
   const handleAdd = () => {
@@ -48,12 +188,20 @@ export default function FunnelDetail({ detail, funnelColor }: { detail: FunnelDe
 
   return (
     <div className="space-y-5 animate-in">
-      {/* Summary */}
       <p className="text-sm text-slate-500 leading-relaxed">{detail.summary}</p>
 
       {/* KPI cards */}
       <div>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">KPI 달성 현황</h4>
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">KPI 달성 현황</h4>
+          <button
+            onClick={() => setEditKPIOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+          >
+            <Pencil size={11} />
+            KPI 편집
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {detail.kpis.map((kpi, i) => {
             const achieveColor = kpi.achievement >= 100 ? "#10B981" : kpi.achievement >= 80 ? funnelColor : kpi.achievement >= 60 ? "#F59E0B" : "#EF4444";
@@ -121,13 +269,11 @@ export default function FunnelDetail({ detail, funnelColor }: { detail: FunnelDe
             </span>
           </div>
 
-          {/* Progress */}
           <div className="mb-3 h-1.5 w-full rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-emerald-400 transition-all duration-500"
               style={{ width: todos.length ? `${(completed / todos.length) * 100}%` : "0%" }} />
           </div>
 
-          {/* Add form */}
           <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 space-y-2">
             <input type="text" placeholder="새 개선 항목..."
               value={inputText} onChange={(e) => setInputText(e.target.value)}
@@ -147,7 +293,6 @@ export default function FunnelDetail({ detail, funnelColor }: { detail: FunnelDe
             </div>
           </div>
 
-          {/* Items */}
           <div className="flex-1 space-y-1 overflow-y-auto">
             {todos.length === 0 && (
               <div className="py-4 text-center text-xs text-slate-400">등록된 항목이 없습니다</div>
@@ -180,6 +325,14 @@ export default function FunnelDetail({ detail, funnelColor }: { detail: FunnelDe
           </div>
         </div>
       </div>
+
+      <KPIEditModal
+        open={editKPIOpen}
+        onClose={() => setEditKPIOpen(false)}
+        kpis={detail.kpis}
+        funnelColor={funnelColor}
+        onSave={(kpis) => updateFunnelKPIs(detail.funnelId, kpis)}
+      />
     </div>
   );
 }

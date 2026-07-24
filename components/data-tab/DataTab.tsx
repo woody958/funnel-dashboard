@@ -4,13 +4,12 @@ import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import KPICards from "./KPICards";
 import FunnelDetail from "./FunnelDetail";
-import { funnelDetails } from "@/lib/mockData";
 import { useDashboard } from "@/context/DashboardContext";
 
 const FUNNEL_ICONS = ["📋", "📣", "💬", "🎓", "💰"];
 
 export default function DataTab() {
-  const { options } = useDashboard();
+  const { options, funnelDetails } = useDashboard();
   const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null);
 
   const funnelOptions = options.funnels;
