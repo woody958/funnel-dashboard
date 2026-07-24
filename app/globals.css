@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0F1117;
+  --bg-secondary: #1A1D2E;
+  --bg-card: #1E2235;
+  --border: #2A2D45;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: #E2E8F0;
+  font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1A1D2E;
+}
+::-webkit-scrollbar-thumb {
+  background: #363A55;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4F8EF7;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Remove transition from animations */
+.no-transition,
+.no-transition * {
+  transition: none !important;
+}
+
+/* Gantt chart date input styles */
+input[type="date"] {
+  color-scheme: dark;
+}
+
+/* Focus styles */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
