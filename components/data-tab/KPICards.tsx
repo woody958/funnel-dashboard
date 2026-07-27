@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, TrendingUp, DollarSign, BarChart2, Target, Star,
-  TrendingDown, Pencil, Plus, Trash2, GripVertical, type LucideIcon,
+  TrendingDown, Pencil, Plus, Trash2, type LucideIcon,
 } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import type { KPICard } from "@/lib/types";
@@ -12,12 +12,13 @@ import { Button } from "@/components/ui/FormField";
 import { generateId } from "@/lib/utils";
 
 const iconMap: Record<string, LucideIcon> = {
-  Users, TrendingUp, DollarSign, BarChart2, Target, Star,
+  Users, TrendingUp, TrendingDown, DollarSign, BarChart2, Target, Star,
 };
 
 const ICON_OPTIONS = [
   { id: "Users", label: "👥 사용자" },
   { id: "TrendingUp", label: "📈 상승" },
+  { id: "TrendingDown", label: "📉 하락" },
   { id: "DollarSign", label: "💰 매출" },
   { id: "BarChart2", label: "📊 차트" },
   { id: "Target", label: "🎯 목표" },
@@ -254,8 +255,9 @@ function GroupEditModal({
 }
 
 const GROUP_COLORS: Record<string, { dot: string; badge: string; text: string }> = {
-  "group-free": { dot: "#3B82F6", badge: "bg-blue-50 text-blue-600", text: "text-blue-600" },
-  "group-paid": { dot: "#F59E0B", badge: "bg-amber-50 text-amber-600", text: "text-amber-600" },
+  "group-inflow":  { dot: "#3B82F6", badge: "bg-blue-50 text-blue-600",   text: "text-blue-600" },
+  "group-lecture": { dot: "#10B981", badge: "bg-emerald-50 text-emerald-600", text: "text-emerald-600" },
+  "group-paid":    { dot: "#F59E0B", badge: "bg-amber-50 text-amber-600",  text: "text-amber-600" },
 };
 
 export default function KPICards() {
@@ -294,7 +296,7 @@ export default function KPICards() {
               <div className="hidden" />
             )}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {group.cards.map((card) => (
                 <KPICardItem key={card.id} card={card} />
               ))}
@@ -305,7 +307,7 @@ export default function KPICards() {
               <div className="mt-5 flex items-center gap-3">
                 <div className="flex-1 border-t border-dashed border-slate-200" />
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-medium text-slate-400">
-                  ▼ 유료 전환
+                  {gi === 0 ? "▼ 강의 진행" : "▼ 유료 전환"}
                 </span>
                 <div className="flex-1 border-t border-dashed border-slate-200" />
               </div>

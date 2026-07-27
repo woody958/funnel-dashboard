@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import KPICards from "./KPICards";
 import FunnelDetail from "./FunnelDetail";
+import ImportExport from "./ImportExport";
 import { useDashboard } from "@/context/DashboardContext";
 
 const FUNNEL_ICONS = ["📋", "📣", "💬", "🎓", "💰"];
@@ -21,9 +22,12 @@ export default function DataTab() {
     <div className="space-y-6">
       {/* 1. 종합 KPI 요약 */}
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          종합 KPI 요약
-        </h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            종합 KPI 요약
+          </h2>
+          <ImportExport />
+        </div>
         <KPICards />
       </section>
 
@@ -40,14 +44,18 @@ export default function DataTab() {
               ? Math.round(detail.kpis.reduce((s, k) => s + k.achievement, 0) / detail.kpis.length)
               : 0;
             const achieveColor =
-              avgAchievement >= 100 ? "#10B981" : avgAchievement >= 80 ? funnel.color : avgAchievement >= 60 ? "#F59E0B" : "#EF4444";
+              avgAchievement >= 100
+                ? "#10B981"
+                : avgAchievement >= 80
+                ? funnel.color
+                : avgAchievement >= 60
+                ? "#F59E0B"
+                : "#EF4444";
 
             return (
               <button
                 key={funnel.id}
-                onClick={() =>
-                  setSelectedFunnelId(isSelected ? null : funnel.id)
-                }
+                onClick={() => setSelectedFunnelId(isSelected ? null : funnel.id)}
                 className={`group relative flex flex-col items-start rounded-xl border p-4 text-left transition-all hover:shadow-md ${
                   isSelected
                     ? "shadow-md"
@@ -63,7 +71,6 @@ export default function DataTab() {
                     : {}
                 }
               >
-                {/* Step number + icon */}
                 <div className="mb-3 flex w-full items-center justify-between">
                   <span className="text-2xl">{FUNNEL_ICONS[idx]}</span>
                   <span
@@ -74,7 +81,6 @@ export default function DataTab() {
                   </span>
                 </div>
 
-                {/* Step label */}
                 <div className="mb-1 text-[10px] font-medium text-slate-400">
                   STEP {idx + 1}
                 </div>
@@ -85,7 +91,6 @@ export default function DataTab() {
                   {funnel.label}
                 </div>
 
-                {/* Mini progress bar */}
                 <div className="mt-3 h-1 w-full rounded-full bg-slate-100">
                   <div
                     className="h-full rounded-full transition-all duration-700"
@@ -96,7 +101,6 @@ export default function DataTab() {
                   />
                 </div>
 
-                {/* Expand indicator */}
                 <ChevronRight
                   size={14}
                   className={`absolute bottom-3 right-3 transition-transform ${
@@ -112,9 +116,17 @@ export default function DataTab() {
 
       {/* 3. 퍼널 상세 */}
       {selectedFunnelId && selectedDetail && selectedOption && (
-        <section className="rounded-xl border-2 p-6 transition-all" style={{ borderColor: selectedOption.color, backgroundColor: `${selectedOption.color}05` }}>
-          {/* Section header */}
-          <div className="mb-5 flex items-center gap-3 border-b pb-4" style={{ borderColor: `${selectedOption.color}33` }}>
+        <section
+          className="rounded-xl border-2 p-6 transition-all"
+          style={{
+            borderColor: selectedOption.color,
+            backgroundColor: `${selectedOption.color}05`,
+          }}
+        >
+          <div
+            className="mb-5 flex items-center gap-3 border-b pb-4"
+            style={{ borderColor: `${selectedOption.color}33` }}
+          >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg text-white text-sm font-bold"
               style={{ backgroundColor: selectedOption.color }}

@@ -33,6 +33,8 @@ export interface KPICard {
   icon: string;
   color: string;
   bgColor: string;
+  linkedFunnelId?: string;
+  linkedKPILabel?: string;
 }
 
 export interface KPIGroup {
