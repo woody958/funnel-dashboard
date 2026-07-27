@@ -36,19 +36,51 @@ const COLOR_PRESETS = [
   { color: "#6366F1", bg: "rgba(99,102,241,0.1)" },
 ];
 
+function calcAchievement(value: string, target: string): number {
+  const extractNum = (s: string) => {
+    const match = s.replace(/,/g, "").match(/[\d.]+/);
+    return match ? parseFloat(match[0]) : null;
+  };
+  const v = extractNum(value);
+  const t = extractNum(target);
+  if (v !== null && t !== null && t !== 0) return Math.round((v / t) * 100);
+  return 0;
+}
+
 function KPICardItem({ card }: { card: KPICard }) {
   const Icon: LucideIcon = iconMap[card.icon] ?? BarChart2;
   const isPositive = card.change > 0;
   const isNegative = card.change < 0;
+  const hasTarget = !!card.target;
+  const achievement = card.achievement ?? 0;
+  const achieveColor =
+    achievement >= 100 ? "#10B981" : achievement >= 80 ? card.color : achievement >= 60 ? "#F59E0B" : "#EF4444";
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500 leading-snug">{card.title}</span>
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: card.bgColor }}>
           <Icon size={15} style={{ color: card.color }} />
         </div>
       </div>
-      <div className="mb-1 text-xl font-bold text-slate-900">{card.value}</div>
+      <div className="mb-0.5 text-xl font-bold text-slate-900">{card.value}</div>
+      {hasTarget && (
+        <div className="mb-2 text-[11px] text-slate-400">목표: {card.target}</div>
+      )}
+      {hasTarget && (
+        <div className="mb-2">
+          <div className="h-1.5 w-full rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(achievement, 100)}%`, backgroundColor: achieveColor }}
+            />
+          </div>
+          <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>
+            {achievement}% 달성
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-1">
         {isPositive ? (
           <TrendingUp size={11} className="text-emerald-500" />
@@ -90,7 +122,14 @@ function GroupEditModal({
 
   function updateCard(index: number, field: keyof KPICard, val: string | number) {
     setCards((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, [field]: val } : c))
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        const updated = { ...c, [field]: val };
+        if (field === "value" || field === "target") {
+          updated.achievement = calcAchievement(String(updated.value ?? ""), String(updated.target ?? ""));
+        }
+        return updated;
+      })
     );
   }
 
@@ -178,6 +217,28 @@ function GroupEditModal({
                   onChange={(e) => updateCard(i, "value", e.target.value)}
                   className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
                   placeholder="예: 324명"
+                />
+              </div>
+
+              {/* 목표 값 */}
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">목표 값</label>
+                <input
+                  value={card.target ?? ""}
+                  onChange={(e) => updateCard(i, "target", e.target.value)}
+                  className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  placeholder="예: 400명"
+                />
+              </div>
+
+              {/* 달성률 자동계산 */}
+              <div>
+                <label className="mb-0.5 block text-[10px] text-slate-500">달성률 (%) · 자동계산</label>
+                <input
+                  type="number"
+                  value={card.achievement ?? 0}
+                  readOnly
+                  className="w-full rounded border border-slate-100 bg-slate-100 px-2 py-1.5 text-xs text-slate-500 outline-none cursor-default"
                 />
               </div>
 

@@ -62,7 +62,7 @@ const LS_TASKS = "fd_tasks_v3";
 const LS_OPTIONS = "fd_options_v3";
 const LS_TODOS = "fd_todos_v3";
 const LS_FUNNEL_DETAILS = "fd_funnel_details_v3";
-const LS_KPI_GROUPS = "fd_kpi_groups_v3";
+const LS_KPI_GROUPS = "fd_kpi_groups_v4";
 
 function load<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -178,7 +178,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           if (card.linkedFunnelId !== funnelId || !card.linkedKPILabel) return card;
           const linked = kpis.find((k) => k.label === card.linkedKPILabel);
           if (!linked) return card;
-          return { ...card, value: linked.value, change: linked.change, changeLabel: linked.changeLabel };
+          const newValue = linked.value;
+          const newAchievement = card.target
+            ? calcAchievement(newValue, card.target)
+            : linked.achievement;
+          return { ...card, value: newValue, change: linked.change, changeLabel: linked.changeLabel, achievement: newAchievement };
         }),
       }))
     );

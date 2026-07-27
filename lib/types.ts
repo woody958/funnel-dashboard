@@ -28,6 +28,8 @@ export interface KPICard {
   id: string;
   title: string;
   value: string;
+  target?: string;
+  achievement?: number;
   change: number;
   changeLabel: string;
   icon: string;
