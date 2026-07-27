@@ -194,10 +194,10 @@ export const defaultKPIGroups: KPIGroup[] = [
     cards: [
       {
         id: "kpi-inflow-1",
-        title: "광고 유입",
-        value: "1,500회",
-        target: "2,000회",
-        achievement: 75,
+        title: "광고 유입 CPA",
+        value: "₩1,389/명",
+        target: "₩1,200/명",
+        achievement: 86,
         change: 12.0,
         changeLabel: "전기 대비",
         icon: "BarChart2",
@@ -205,6 +205,12 @@ export const defaultKPIGroups: KPIGroup[] = [
         bgColor: "rgba(59,130,246,0.1)",
         linkedFunnelId: "fn-recruit",
         linkedKPILabel: "광고 유입",
+        cpaData: { marketingCost: 450000, visitors: 324 },
+        mediaBreakdown: [
+          { media: "인스타그램", marketingCost: 216000, count: 180 },
+          { media: "페이스북", marketingCost: 150000, count: 100 },
+          { media: "유튜브", marketingCost: 84000, count: 44 },
+        ],
       },
       {
         id: "kpi-inflow-2",
@@ -219,6 +225,11 @@ export const defaultKPIGroups: KPIGroup[] = [
         bgColor: "rgba(99,102,241,0.1)",
         linkedFunnelId: "fn-recruit",
         linkedKPILabel: "랜딩 유지",
+        abTestData: {
+          enabled: true,
+          variantA: { label: "A안 (기존)", value: "72%" },
+          variantB: { label: "B안 (신규 CTA)", value: "64%" },
+        },
       },
       {
         id: "kpi-inflow-3",
@@ -233,6 +244,11 @@ export const defaultKPIGroups: KPIGroup[] = [
         bgColor: "rgba(6,182,212,0.1)",
         linkedFunnelId: "fn-recruit",
         linkedKPILabel: "강의 신청",
+        mediaBreakdown: [
+          { media: "인스타그램", count: 180 },
+          { media: "페이스북", count: 100 },
+          { media: "유튜브", count: 44 },
+        ],
       },
       {
         id: "kpi-inflow-4",

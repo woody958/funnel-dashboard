@@ -62,7 +62,7 @@ const LS_TASKS = "fd_tasks_v3";
 const LS_OPTIONS = "fd_options_v3";
 const LS_TODOS = "fd_todos_v3";
 const LS_FUNNEL_DETAILS = "fd_funnel_details_v3";
-const LS_KPI_GROUPS = "fd_kpi_groups_v4";
+const LS_KPI_GROUPS = "fd_kpi_groups_v5";
 
 function load<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;

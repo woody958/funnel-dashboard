@@ -24,6 +24,23 @@ export interface Task {
   createdAt: string;
 }
 
+export interface CPACardData {
+  marketingCost: number;
+  visitors: number;
+}
+
+export interface ABTestData {
+  enabled: boolean;
+  variantA: { label: string; value: string };
+  variantB: { label: string; value: string };
+}
+
+export interface MediaBreakdownItem {
+  media: string;
+  marketingCost?: number;
+  count: number;
+}
+
 export interface KPICard {
   id: string;
   title: string;
@@ -37,6 +54,9 @@ export interface KPICard {
   bgColor: string;
   linkedFunnelId?: string;
   linkedKPILabel?: string;
+  cpaData?: CPACardData;
+  abTestData?: ABTestData;
+  mediaBreakdown?: MediaBreakdownItem[];
 }
 
 export interface KPIGroup {
