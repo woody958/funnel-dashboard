@@ -67,8 +67,13 @@ function CPAKPICard({ card }: { card: KPICard }) {
   const { cpaData, mediaBreakdown } = card;
   const cpa = cpaData && cpaData.visitors > 0 ? Math.round(cpaData.marketingCost / cpaData.visitors) : null;
   const displayValue = cpa !== null ? `${formatKRW(cpa)}/명` : card.value;
-  const achievement = card.achievement ?? 0;
+  // CPA는 낮을수록 좋으므로 달성률 = target / value × 100 (역산)
+  const achievement = (cpa !== null && card.target)
+    ? calcAchievement(card.target, displayValue)
+    : (card.achievement ?? 0);
   const achieveColor = achievement >= 100 ? "#10B981" : achievement >= 80 ? card.color : achievement >= 60 ? "#F59E0B" : "#EF4444";
+  const cpaTargetNum = card.target ? parseFloat(card.target.replace(/,/g, "").match(/[\d.]+/)?.[0] ?? "0") : null;
+  const cpaExcess = cpa !== null && cpaTargetNum !== null && cpa > cpaTargetNum ? cpa - cpaTargetNum : null;
   const isPositive = card.change > 0;
   const isNegative = card.change < 0;
 
@@ -86,7 +91,15 @@ function CPAKPICard({ card }: { card: KPICard }) {
       {card.target && (
         <div className="mb-2">
           <AchievementBar value={achievement} color={card.color} />
-          <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>{achievement}% 달성</div>
+          {cpaExcess !== null ? (
+            <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>
+              개선 필요 · 목표 대비 {formatKRW(cpaExcess)}/명 초과
+            </div>
+          ) : (
+            <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>
+              {achievement}% 달성
+            </div>
+          )}
         </div>
       )}
 
@@ -298,9 +311,11 @@ function CPAEditSection({ card, index, updateCard }: { card: KPICard; index: num
     const next = { ...cpaData, [field]: val };
     updateCard(index, "cpaData", next);
     const newCPA = next.visitors > 0 ? Math.round(next.marketingCost / next.visitors) : 0;
-    updateCard(index, "value", `${formatKRW(newCPA)}/명`);
+    const newCPAStr = `${formatKRW(newCPA)}/명`;
+    updateCard(index, "value", newCPAStr);
     if (card.target) {
-      updateCard(index, "achievement", calcAchievement(`${formatKRW(newCPA)}/명`, card.target));
+      // CPA 역산: target / value × 100
+      updateCard(index, "achievement", calcAchievement(card.target, newCPAStr));
     }
   }
 
@@ -311,8 +326,10 @@ function CPAEditSection({ card, index, updateCard }: { card: KPICard; index: num
     updateCard(index, "mediaBreakdown", mb);
     updateCard(index, "cpaData", { marketingCost: totalCost, visitors: totalCount });
     const newCPA = totalCount > 0 ? Math.round(totalCost / totalCount) : 0;
-    updateCard(index, "value", `${formatKRW(newCPA)}/명`);
-    if (card.target) updateCard(index, "achievement", calcAchievement(`${formatKRW(newCPA)}/명`, card.target));
+    const newCPAStr = `${formatKRW(newCPA)}/명`;
+    updateCard(index, "value", newCPAStr);
+    // CPA 역산: target / value × 100
+    if (card.target) updateCard(index, "achievement", calcAchievement(card.target, newCPAStr));
   }
 
   function addMedia() {
