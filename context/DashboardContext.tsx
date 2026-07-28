@@ -8,6 +8,7 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
+import LZString from "lz-string";
 import type { Task, DashboardOptions, TodoItem, FunnelDetailData, FunnelKPIItem, KPIGroup, KPICard } from "@/lib/types";
 import { defaultOptions, mockTasks, initialTodos, funnelDetails as defaultFunnelDetails, defaultKPIGroups } from "@/lib/mockData";
 import { generateId, toISODate, autoGenerateBottlenecks } from "@/lib/utils";
@@ -40,6 +41,7 @@ interface DashboardContextValue {
   todos: TodoItem[];
   funnelDetails: FunnelDetailData[];
   kpiGroups: KPIGroup[];
+  isReadOnly: boolean;
   addTask: (task: Omit<Task, "id" | "createdAt">) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -55,6 +57,7 @@ interface DashboardContextValue {
   updateKPIGroupCards: (groupId: string, cards: KPICard[]) => void;
   importData: (data: ImportData) => void;
   saveAll: () => void;
+  buildShareUrl: () => string;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -93,6 +96,18 @@ function calcAchievement(value: string, target: string): number {
   return 0;
 }
 
+function parseSharedState(hash: string): { options: DashboardOptions; tasks: Task[]; todos: TodoItem[]; funnelDetails: FunnelDetailData[]; kpiGroups: KPIGroup[] } | null {
+  try {
+    const match = hash.match(/[#&]state=([^&]+)/);
+    if (!match) return null;
+    const decompressed = LZString.decompressFromEncodedURIComponent(match[1]);
+    if (!decompressed) return null;
+    return JSON.parse(decompressed);
+  } catch {
+    return null;
+  }
+}
+
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [options, setOptions] = useState<DashboardOptions>(defaultOptions);
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
@@ -100,8 +115,22 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [funnelDetails, setFunnelDetails] = useState<FunnelDetailData[]>(defaultFunnelDetails);
   const [kpiGroups, setKpiGroups] = useState<KPIGroup[]>(defaultKPIGroups);
   const [hydrated, setHydrated] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
+    // URL 해시에 공유 상태가 있으면 우선 사용 (읽기 전용 모드)
+    const shared = parseSharedState(window.location.hash);
+    if (shared) {
+      if (shared.options) setOptions(shared.options);
+      if (shared.tasks) setTasks(shared.tasks);
+      if (shared.todos) setTodos(shared.todos);
+      if (shared.funnelDetails) setFunnelDetails(shared.funnelDetails);
+      if (shared.kpiGroups) setKpiGroups(shared.kpiGroups);
+      setIsReadOnly(true);
+      setHydrated(true);
+      return;
+    }
+
     setOptions(load(LS_OPTIONS, defaultOptions));
     setTasks(load(LS_TASKS, mockTasks));
     setTodos(load(LS_TODOS, initialTodos));
@@ -258,6 +287,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     save(LS_KPI_GROUPS, kpiGroups);
   }, [options, tasks, todos, funnelDetails, kpiGroups]);
 
+  const buildShareUrl = useCallback(() => {
+    const state = { options, tasks, todos, funnelDetails, kpiGroups };
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(state));
+    const base = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}` : "";
+    return `${base}#state=${compressed}`;
+  }, [options, tasks, todos, funnelDetails, kpiGroups]);
+
   // CSV/Excel 파일 가져오기로 전체 KPI 일괄 업데이트
   const importData = useCallback((data: ImportData) => {
     if (data.kpiSummary && data.kpiSummary.length > 0) {
@@ -345,6 +381,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         todos,
         funnelDetails,
         kpiGroups,
+        isReadOnly,
         addTask,
         updateTask,
         deleteTask,
@@ -360,6 +397,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateKPIGroupCards,
         importData,
         saveAll,
+        buildShareUrl,
       }}
     >
       {children}

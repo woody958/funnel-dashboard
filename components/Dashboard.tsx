@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, Target, Settings, Activity, Save, Check } from "lucide-react";
+import { BarChart3, Target, Settings, Activity, Save, Check, Share2 } from "lucide-react";
 import DataTab from "@/components/data-tab/DataTab";
 import MissionTab from "@/components/mission-tab/MissionTab";
 import SettingsModal from "@/components/SettingsModal";
@@ -13,7 +13,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<MainTab>("data");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
-  const { tasks, saveAll } = useDashboard();
+  const [copiedToast, setCopiedToast] = useState(false);
+  const { tasks, saveAll, buildShareUrl, isReadOnly } = useDashboard();
 
   const inProgress = tasks.filter((t) => t.statusId === "st-inprog").length;
 
@@ -23,8 +24,23 @@ export default function Dashboard() {
     setTimeout(() => setSavedToast(false), 2500);
   }
 
+  async function handleShare() {
+    const url = buildShareUrl();
+    await navigator.clipboard.writeText(url);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 2500);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Read-only banner */}
+      {isReadOnly && (
+        <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-700">
+          <span className="font-semibold">공유된 대시보드 (읽기 전용)</span>
+          <span className="text-amber-500">·</span>
+          <span>데이터를 내 브라우저에 저장하려면 저장 버튼을 클릭하세요.</span>
+        </div>
+      )}
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-screen-2xl px-4 sm:px-6">
@@ -73,6 +89,18 @@ export default function Dashboard() {
 
             {/* Right controls */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  copiedToast
+                    ? "border-blue-300 bg-blue-50 text-blue-600"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-blue-300 hover:text-blue-500"
+                }`}
+                title="현재 데이터가 반영된 공유 링크 복사"
+              >
+                {copiedToast ? <Check size={13} /> : <Share2 size={13} />}
+                {copiedToast ? "복사됨" : "공유"}
+              </button>
               <button
                 onClick={handleManualSave}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
