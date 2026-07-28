@@ -264,8 +264,27 @@ function StandardKPICard({ card }: { card: KPICard }) {
   const isPositive = card.change > 0;
   const isNegative = card.change < 0;
   const hasTarget = !!card.target;
-  const achievement = card.achievement ?? 0;
+  const lowerIsBetter = card.lowerIsBetter ?? false;
+
+  // lowerIsBetter 카드는 달성률을 역산 (target / value × 100)
+  const achievement = lowerIsBetter && card.target
+    ? calcAchievement(card.target, card.value)
+    : (card.achievement ?? 0);
   const achieveColor = achievement >= 100 ? "#10B981" : achievement >= 80 ? card.color : achievement >= 60 ? "#F59E0B" : "#EF4444";
+
+  // 목표 초과 여부 계산 (낮을수록 좋은 지표)
+  let excessLabel: string | null = null;
+  if (lowerIsBetter && card.target) {
+    const extractNum = (s: string) => { const m = s.replace(/,/g, "").match(/[\d.]+/); return m ? parseFloat(m[0]) : null; };
+    const vNum = extractNum(card.value);
+    const tNum = extractNum(card.target);
+    if (vNum !== null && tNum !== null && vNum > tNum) {
+      const excess = vNum - tNum;
+      const isCurrency = card.value.startsWith("₩") || (card.target?.startsWith("₩") ?? false);
+      const isPct = card.value.includes("%");
+      excessLabel = isCurrency ? `${formatKRW(excess)} 초과` : isPct ? `${excess}%p 초과` : `${excess} 초과`;
+    }
+  }
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -280,7 +299,13 @@ function StandardKPICard({ card }: { card: KPICard }) {
       {hasTarget && (
         <div className="mb-2">
           <AchievementBar value={achievement} color={card.color} />
-          <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>{achievement}% 달성</div>
+          {excessLabel !== null ? (
+            <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>
+              개선 필요 · 목표 대비 {excessLabel}
+            </div>
+          ) : (
+            <div className="mt-1 text-[11px] font-semibold" style={{ color: achieveColor }}>{achievement}% 달성</div>
+          )}
         </div>
       )}
       <div className="flex items-center gap-1">
@@ -466,9 +491,13 @@ function GroupEditModal({ open, onClose, groupId }: { open: boolean; onClose: ()
       prev.map((c, i) => {
         if (i !== index) return c;
         const updated = { ...c, [field]: val } as KPICard;
-        // Recalculate achievement when value or target changes (non-CPA cards)
-        if (!updated.cpaData && (field === "value" || field === "target")) {
-          updated.achievement = calcAchievement(String(updated.value ?? ""), String(updated.target ?? ""));
+        // Recalculate achievement when value, target, or lowerIsBetter changes (non-CPA cards)
+        if (!updated.cpaData && (field === "value" || field === "target" || field === "lowerIsBetter")) {
+          if (updated.lowerIsBetter) {
+            updated.achievement = calcAchievement(String(updated.target ?? ""), String(updated.value ?? ""));
+          } else {
+            updated.achievement = calcAchievement(String(updated.value ?? ""), String(updated.target ?? ""));
+          }
         }
         return updated;
       })
@@ -568,6 +597,19 @@ function GroupEditModal({ open, onClose, groupId }: { open: boolean; onClose: ()
                     <button key={preset.color} onClick={() => setCardColor(i, preset)} className="h-5 w-5 rounded-full border-2 transition-transform hover:scale-110" style={{ backgroundColor: preset.color, borderColor: card.color === preset.color ? "#1e293b" : "transparent" }} />
                   ))}
                 </div>
+              </div>
+
+              <div className="col-span-2 flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id={`lower-is-better-${i}`}
+                  checked={card.lowerIsBetter ?? false}
+                  onChange={(e) => updateCard(i, "lowerIsBetter", e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-amber-500"
+                />
+                <label htmlFor={`lower-is-better-${i}`} className="text-[10px] text-slate-500 cursor-pointer select-none">
+                  낮을수록 좋은 지표 (CPA, 이탈률, 전환 단가 등)
+                </label>
               </div>
             </div>
 

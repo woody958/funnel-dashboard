@@ -57,6 +57,7 @@ export interface KPICard {
   cpaData?: CPACardData;
   abTestData?: ABTestData;
   mediaBreakdown?: MediaBreakdownItem[];
+  lowerIsBetter?: boolean;
 }
 
 export interface KPIGroup {

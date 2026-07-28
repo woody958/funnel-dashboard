@@ -311,6 +311,7 @@ export const defaultKPIGroups: KPIGroup[] = [
         bgColor: "rgba(245,158,11,0.1)",
         linkedFunnelId: "fn-free",
         linkedKPILabel: "라이브 전환 단가",
+        lowerIsBetter: true,
       },
       {
         id: "kpi-lec-3",

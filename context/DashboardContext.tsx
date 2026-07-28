@@ -54,6 +54,7 @@ interface DashboardContextValue {
   updateKPIGroupLabel: (groupId: string, label: string) => void;
   updateKPIGroupCards: (groupId: string, cards: KPICard[]) => void;
   importData: (data: ImportData) => void;
+  saveAll: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -105,7 +106,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setTasks(load(LS_TASKS, mockTasks));
     setTodos(load(LS_TODOS, initialTodos));
     setFunnelDetails(load(LS_FUNNEL_DETAILS, defaultFunnelDetails));
-    setKpiGroups(load(LS_KPI_GROUPS, defaultKPIGroups));
+
+    // lowerIsBetter 마이그레이션: 기존 localStorage 데이터에 플래그 보정
+    const storedGroups = load(LS_KPI_GROUPS, defaultKPIGroups);
+    const migratedGroups = storedGroups.map((g: KPIGroup) => ({
+      ...g,
+      cards: g.cards.map((c: KPICard) =>
+        c.id === "kpi-lec-2" && c.lowerIsBetter === undefined
+          ? { ...c, lowerIsBetter: true }
+          : c
+      ),
+    }));
+    setKpiGroups(migratedGroups);
+
     setHydrated(true);
   }, []);
 
@@ -237,6 +250,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const saveAll = useCallback(() => {
+    save(LS_OPTIONS, options);
+    save(LS_TASKS, tasks);
+    save(LS_TODOS, todos);
+    save(LS_FUNNEL_DETAILS, funnelDetails);
+    save(LS_KPI_GROUPS, kpiGroups);
+  }, [options, tasks, todos, funnelDetails, kpiGroups]);
+
   // CSV/Excel 파일 가져오기로 전체 KPI 일괄 업데이트
   const importData = useCallback((data: ImportData) => {
     if (data.kpiSummary && data.kpiSummary.length > 0) {
@@ -338,6 +359,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateKPIGroupLabel,
         updateKPIGroupCards,
         importData,
+        saveAll,
       }}
     >
       {children}

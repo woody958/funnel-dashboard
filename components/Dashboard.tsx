@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, Target, Settings, Activity } from "lucide-react";
+import { BarChart3, Target, Settings, Activity, Save, Check } from "lucide-react";
 import DataTab from "@/components/data-tab/DataTab";
 import MissionTab from "@/components/mission-tab/MissionTab";
 import SettingsModal from "@/components/SettingsModal";
@@ -12,9 +12,16 @@ type MainTab = "data" | "mission";
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<MainTab>("data");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { tasks } = useDashboard();
+  const [savedToast, setSavedToast] = useState(false);
+  const { tasks, saveAll } = useDashboard();
 
   const inProgress = tasks.filter((t) => t.statusId === "st-inprog").length;
+
+  function handleManualSave() {
+    saveAll();
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 2500);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -64,14 +71,28 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Settings */}
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:border-blue-300 hover:text-blue-500"
-              title="드롭다운 옵션 관리"
-            >
-              <Settings size={15} />
-            </button>
+            {/* Right controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleManualSave}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  savedToast
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-600"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-blue-300 hover:text-blue-500"
+                }`}
+                title="현재 데이터 수동 저장"
+              >
+                {savedToast ? <Check size={13} /> : <Save size={13} />}
+                {savedToast ? "저장됨" : "저장"}
+              </button>
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:border-blue-300 hover:text-blue-500"
+                title="드롭다운 옵션 관리"
+              >
+                <Settings size={15} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
