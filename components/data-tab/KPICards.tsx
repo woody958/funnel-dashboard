@@ -17,7 +17,7 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   useSortable,
   arrayMove,
 } from "@dnd-kit/sortable";
@@ -656,17 +656,9 @@ const GROUP_COLORS: Record<string, { dot: string; badge: string; text: string }>
   "group-paid":    { dot: "#F59E0B", badge: "bg-amber-50 text-amber-600",  text: "text-amber-600" },
 };
 
-function SortableKPIGroup({
-  group,
-  isLast,
-  onEdit,
-}: {
-  group: KPIGroup;
-  isLast: boolean;
-  onEdit: () => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group.id });
-  const style = GROUP_COLORS[group.id] ?? { dot: "#64748B", badge: "bg-slate-100 text-slate-600", text: "text-slate-600" };
+// 개별 KPI 카드를 드래그 가능하게 감싸는 래퍼
+function SortableCard({ card }: { card: KPICard }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
 
   return (
     <div
@@ -678,17 +670,53 @@ function SortableKPIGroup({
         position: "relative",
         zIndex: isDragging ? 10 : "auto",
       }}
+      className="group/card"
     >
+      {/* 드래그 핸들 — 카드 호버 시 좌상단에 표시 */}
+      <button
+        {...listeners}
+        {...attributes}
+        className="absolute left-2 top-2 z-10 cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover/card:opacity-100 transition-opacity text-slate-300 hover:text-slate-500"
+        title="드래그하여 순서 변경"
+      >
+        <GripVertical size={13} />
+      </button>
+      <KPICardItem card={card} />
+    </div>
+  );
+}
+
+// 그룹 내 카드 목록을 독립적인 DndContext로 관리
+function KPIGroupSection({
+  group,
+  isLast,
+  onEdit,
+}: {
+  group: KPIGroup;
+  isLast: boolean;
+  onEdit: () => void;
+}) {
+  const { updateKPIGroupCards } = useDashboard();
+  const style = GROUP_COLORS[group.id] ?? { dot: "#64748B", badge: "bg-slate-100 text-slate-600", text: "text-slate-600" };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = group.cards.findIndex((c) => c.id === active.id);
+      const newIndex = group.cards.findIndex((c) => c.id === over.id);
+      updateKPIGroupCards(group.id, arrayMove(group.cards, oldIndex, newIndex));
+    }
+  }
+
+  return (
+    <div>
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <button
-            {...listeners}
-            {...attributes}
-            className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-400 touch-none"
-            title="드래그하여 순서 변경"
-          >
-            <GripVertical size={14} />
-          </button>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
             <span className={`text-xs font-semibold ${style.text}`}>{group.label}</span>
@@ -704,9 +732,15 @@ function SortableKPIGroup({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {group.cards.map((card) => <KPICardItem key={card.id} card={card} />)}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={group.cards.map((c) => c.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {group.cards.map((card) => (
+              <SortableCard key={card.id} card={card} />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {!isLast && (
         <div className="mt-5 flex items-center gap-3">
@@ -720,41 +754,23 @@ function SortableKPIGroup({
 }
 
 export default function KPICards() {
-  const { kpiGroups, reorderKPIGroups } = useDashboard();
+  const { kpiGroups } = useDashboard();
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = kpiGroups.findIndex((g) => g.id === active.id);
-      const newIndex = kpiGroups.findIndex((g) => g.id === over.id);
-      reorderKPIGroups(arrayMove(kpiGroups, oldIndex, newIndex));
-    }
-  }
-
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={kpiGroups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-5">
-          {kpiGroups.map((group, gi) => (
-            <SortableKPIGroup
-              key={group.id}
-              group={group}
-              isLast={gi === kpiGroups.length - 1}
-              onEdit={() => setEditGroupId(group.id)}
-            />
-          ))}
-        </div>
-      </SortableContext>
+    <div className="space-y-5">
+      {kpiGroups.map((group, gi) => (
+        <KPIGroupSection
+          key={group.id}
+          group={group}
+          isLast={gi === kpiGroups.length - 1}
+          onEdit={() => setEditGroupId(group.id)}
+        />
+      ))}
 
       {editGroupId && (
         <GroupEditModal open={!!editGroupId} onClose={() => setEditGroupId(null)} groupId={editGroupId} />
       )}
-    </DndContext>
+    </div>
   );
 }
