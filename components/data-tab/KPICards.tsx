@@ -3,10 +3,27 @@
 import { useState, useEffect } from "react";
 import {
   Users, TrendingUp, DollarSign, BarChart2, Target, Star,
-  TrendingDown, Pencil, Plus, Trash2, type LucideIcon,
+  TrendingDown, Pencil, Plus, Trash2, GripVertical, type LucideIcon,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useDashboard } from "@/context/DashboardContext";
-import type { KPICard, MediaBreakdownItem } from "@/lib/types";
+import type { KPICard, KPIGroup, MediaBreakdownItem } from "@/lib/types";
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/FormField";
 import { generateId } from "@/lib/utils";
@@ -639,50 +656,105 @@ const GROUP_COLORS: Record<string, { dot: string; badge: string; text: string }>
   "group-paid":    { dot: "#F59E0B", badge: "bg-amber-50 text-amber-600",  text: "text-amber-600" },
 };
 
-export default function KPICards() {
-  const { kpiGroups } = useDashboard();
-  const [editGroupId, setEditGroupId] = useState<string | null>(null);
+function SortableKPIGroup({
+  group,
+  isLast,
+  onEdit,
+}: {
+  group: KPIGroup;
+  isLast: boolean;
+  onEdit: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group.id });
+  const style = GROUP_COLORS[group.id] ?? { dot: "#64748B", badge: "bg-slate-100 text-slate-600", text: "text-slate-600" };
 
   return (
-    <div className="space-y-5">
-      {kpiGroups.map((group, gi) => {
-        const style = GROUP_COLORS[group.id] ?? { dot: "#64748B", badge: "bg-slate-100 text-slate-600", text: "text-slate-600" };
-        return (
-          <div key={group.id}>
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
-                  <span className={`text-xs font-semibold ${style.text}`}>{group.label}</span>
-                </div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${style.badge}`}>{group.cards.length}개 지수</span>
-              </div>
-              <button onClick={() => setEditGroupId(group.id)} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-colors">
-                <Pencil size={10} />
-                편집
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {group.cards.map((card) => <KPICardItem key={card.id} card={card} />)}
-            </div>
-
-            {gi < kpiGroups.length - 1 && (
-              <div className="mt-5 flex items-center gap-3">
-                <div className="flex-1 border-t border-dashed border-slate-200" />
-                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-medium text-slate-400">
-                  {gi === 0 ? "▼ 강의 진행" : "▼ 유료 전환"}
-                </span>
-                <div className="flex-1 border-t border-dashed border-slate-200" />
-              </div>
-            )}
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        position: "relative",
+        zIndex: isDragging ? 10 : "auto",
+      }}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            {...listeners}
+            {...attributes}
+            className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-400 touch-none"
+            title="드래그하여 순서 변경"
+          >
+            <GripVertical size={14} />
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
+            <span className={`text-xs font-semibold ${style.text}`}>{group.label}</span>
           </div>
-        );
-      })}
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${style.badge}`}>{group.cards.length}개 지수</span>
+        </div>
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+        >
+          <Pencil size={10} />
+          편집
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {group.cards.map((card) => <KPICardItem key={card.id} card={card} />)}
+      </div>
+
+      {!isLast && (
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex-1 border-t border-dashed border-slate-200" />
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-medium text-slate-400">▼ 다음 단계</span>
+          <div className="flex-1 border-t border-dashed border-slate-200" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function KPICards() {
+  const { kpiGroups, reorderKPIGroups } = useDashboard();
+  const [editGroupId, setEditGroupId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = kpiGroups.findIndex((g) => g.id === active.id);
+      const newIndex = kpiGroups.findIndex((g) => g.id === over.id);
+      reorderKPIGroups(arrayMove(kpiGroups, oldIndex, newIndex));
+    }
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={kpiGroups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-5">
+          {kpiGroups.map((group, gi) => (
+            <SortableKPIGroup
+              key={group.id}
+              group={group}
+              isLast={gi === kpiGroups.length - 1}
+              onEdit={() => setEditGroupId(group.id)}
+            />
+          ))}
+        </div>
+      </SortableContext>
 
       {editGroupId && (
         <GroupEditModal open={!!editGroupId} onClose={() => setEditGroupId(null)} groupId={editGroupId} />
       )}
-    </div>
+    </DndContext>
   );
 }

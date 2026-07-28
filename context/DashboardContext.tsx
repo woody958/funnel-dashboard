@@ -55,6 +55,7 @@ interface DashboardContextValue {
   updateFunnelSummary: (funnelId: string, summary: string) => void;
   updateKPIGroupLabel: (groupId: string, label: string) => void;
   updateKPIGroupCards: (groupId: string, cards: KPICard[]) => void;
+  reorderKPIGroups: (reorderedGroups: KPIGroup[]) => void;
   importData: (data: ImportData) => void;
   saveAll: () => void;
   buildShareUrl: () => string;
@@ -242,6 +243,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const reorderKPIGroups = useCallback((reorderedGroups: KPIGroup[]) => {
+    setKpiGroups(reorderedGroups);
+  }, []);
+
   // KPI 연동: 종합 KPI 카드 업데이트 → 퍼널 KPI 동기화 + 병목 자동 재생성
   const updateKPIGroupCards = useCallback((groupId: string, cards: KPICard[]) => {
     setKpiGroups((prev) =>
@@ -395,6 +400,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateFunnelSummary,
         updateKPIGroupLabel,
         updateKPIGroupCards,
+        reorderKPIGroups,
         importData,
         saveAll,
         buildShareUrl,
